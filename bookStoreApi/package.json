@@ -1,0 +1,18 @@
+{
+  "name": "bookstoreapi",
+  "version": "1.0.0",
+  "description": "book store backend",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app"
+  },
+  "author": "shadlia",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "joi": "^17.9.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
