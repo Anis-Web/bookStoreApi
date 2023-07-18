@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const joi = require('joi')
 
 const AuthorSchema = new mongoose.Schema({
     firstName: {
@@ -21,6 +22,32 @@ const AuthorSchema = new mongoose.Schema({
 
 const Author = mongoose.model("Author", AuthorSchema)
 
+//Create
+function validateCreateAuthor(obj) {
+    const schema = joi.object({
+        id: joi.number(),
+        firstName: joi.string().trim().min(2).required(),
+        lastName: joi.string().trim().min(2).required()
+    })
+
+    return schema.validate(obj)
+}
+
+//Update
+function validateUpdateAuthor(obj) {
+    const schema = joi.object({
+        id: joi.number(),
+        firstName: joi.string().trim().min(2).required(),
+        lastName: joi.string().trim().min(2).required()
+    })
+
+    return schema.validate(obj)
+}
+
+
+
 module.exports = {
-    Author
+    Author,
+    validateCreateAuthor,
+    validateUpdateAuthor
 }

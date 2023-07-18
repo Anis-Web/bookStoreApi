@@ -1,30 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const joi = require('joi')
-const { Author } = require('../models/Author')
-
-const authors = [
-    {
-        id: 1,
-        firstName: 'name 1',
-        lastName: 'name 1',
-    },
-    {
-        id: 2,
-        firstName: 'name 2',
-        lastName: 'name 2',
-    },
-    {
-        id: 3,
-        firstName: 'name 3',
-        lastName: 'name 3',
-    },
-    {
-        id: 4,
-        firstName: 'name 4',
-        lastName: 'name 4',
-    }
-]
+const {Author,validateCreateAuthor,validateUpdateAuthor} = require('../models/Author')
 
 /**
  * @desc    Get all authors
@@ -32,8 +8,14 @@ const authors = [
  * @method  Get
  * @access  public
  */
-router.get('/', (req,res) => {
-    res.status(200).json(authors)
+router.get('/', async (req,res) => {
+    try {
+        const authorList = await Author.find() //.sort({firstName: 1}).select("firstName lastName -_id")// to sort the data from a to z
+        res.status(200).json(authorList)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({message: "somthing went wrong"})
+    }
 })
 
 /**
@@ -42,12 +24,13 @@ router.get('/', (req,res) => {
  * @method  Get
  * @access  public
  */
-router.get('/:id', (req,res) => {
-    const author = authors.find(a => a.id === Number(req.params.id))
-    if(author){
-        return res.status(200).send(`Author's name is: ${author.firstName} ${author.lastName}`)
-    } else{
-        res.status(404).send('Author not defined')
+router.get('/:id', async (req,res) => {
+    try {
+        const author = await Author.findById(req.params.id)
+        res.status(200).send(`Author's name is: ${author.firstName} ${author.lastName}`)
+    } catch(error){
+        console.log(error)
+        res.status(500).send('Author not found')
     }
 })
 
@@ -86,7 +69,7 @@ router.post('/', async (req,res) => {
  * @method  Put
  * @access  public
  */
-router.put('/:id', (req,res) => {
+router.put('/:id', async (req,res) => {
     
     const { error } = validateUpdateAuthor(req.body)
 
@@ -94,11 +77,23 @@ router.put('/:id', (req,res) => {
         return res.status(400).json(error.details[0].message)
     }
 
-    const author = authors.find(a => a.id === Number(req.params.id))
-    if(author) {
-        res.status(200).json({message: 'author has been updated'})
-    } else{
-        res.status(404).json({message: 'author not found'})
+    try {
+        const author = await Author.findByIdAndUpdate(
+            req.params.id, 
+            {
+                $set: {
+                    firstName: req.body.firstName,
+                    lastName: req.body.lastName
+                }
+            }, 
+            {
+                new: true
+            }
+        )
+        res.status(200).json(author)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Something went wrong '})
     }
 })
 
@@ -108,35 +103,16 @@ router.put('/:id', (req,res) => {
  * @method Delete
  * @access public
  */
-router.delete('/:id', (req,res) => {
-    const author = authors.find(b => b.id === Number(req.params.id))
-    if(author) {
+router.delete('/:id', async (req,res) => {
+    try {
+        const author = await Author.findById(req.params.id)
+        await Author.findByIdAndDelete(author)
         res.status(200).json({message: 'author has been deleted'})
-    } else{
-        res.status(404).json({message: 'author not found'})
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Something went wrong '})
     }
 })
 
-//Create
-function validateCreateAuthor(obj) {
-    const schema = joi.object({
-        id: joi.number(),
-        firstName: joi.string().trim().min(2).required(),
-        lastName: joi.string().trim().min(2).required()
-    })
-
-    return schema.validate(obj)
-}
-
-//Update
-function validateUpdateAuthor(obj) {
-    const schema = joi.object({
-        id: joi.number(),
-        firstName: joi.string().trim().min(2).required(),
-        lastName: joi.string().trim().min(2).required()
-    })
-
-    return schema.validate(obj)
-}
 
 module.exports = router
