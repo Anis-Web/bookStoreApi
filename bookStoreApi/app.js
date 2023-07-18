@@ -1,6 +1,15 @@
 const express = require('express')
 const booksPath = require('./routes/books')
 const authorsPath = require('./routes/authors')
+//connect between express and mongodb
+const mongoose = require('mongoose')
+
+//connection to DataBase
+//and this is a promise so it return error or success
+mongoose
+    .connect('mongodb://localhost/bookStoreDB')
+    .then(() => console.log('Connected to MongoDB...'))
+    .catch((error) => console.log('Connection failed to MongoDB', error))
 
 // init app
 const app = express()

@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const joi = require('joi')
+const { Author } = require('../models/Author')
 
 const authors = [
     {
@@ -56,7 +57,7 @@ router.get('/:id', (req,res) => {
  * @method  Post
  * @access  public
  */
-router.post('/', (req,res) => {
+router.post('/', async (req,res) => {
     
     const { error } = validateCreateAuthor(req.body)
 
@@ -64,13 +65,19 @@ router.post('/', (req,res) => {
         return res.status(400).json(error.details[0].message)
     }
 
-    const author = {
-        id: authors.length + 1,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName
+    try {
+        const author = new Author({
+            firstName: req.body.firstName,
+            lastName: req.body.lastName
+        })
+    
+        const result = await author.save()
+    
+        res.status(201).json(result) // 201 => created successfuly
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Something went wrong '})
     }
-    authors.push(author)
-    res.status(201).json(author) // 201 => created successfuly
 })
 
 /**
