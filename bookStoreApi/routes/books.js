@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-//labery to validate the api
-const joi = require('joi')
+// const asyncHandler = require('express-async-handler')
+const {Book,validateCreateBook,validateUpdateBook} = require('../models/Book')
 
 // http methods/verbs
 // app.get(route, callbackfun)
@@ -9,29 +9,6 @@ const joi = require('joi')
 // app.put()
 // app.delete()
 // app.listen(port, callbackfun)
-
-const books = [
-    {
-        id: 1,
-        name: 'book 1',
-        author: 'author 1'
-    },
-    {
-        id: 2,
-        name: 'book 2',
-        author: 'author 2'
-    },
-    {
-        id: 3,
-        name: 'book 3',
-        author: 'author 3'
-    },
-    {
-        id: 4,
-        name: 'book 4',
-        author: 'author 4'
-    },
-]
 
 // router.get('/', (req, res) => {
 //     res.send('Hello, Welcome to express js')
@@ -44,23 +21,34 @@ const books = [
  * @method  Get
  * @access  public
  */
-router.get('/', (req,res) => {
-    res.status(200).json(books)
-})
-
+router.get('/',
+    async (req,res) => {
+        try {
+            const books = await Book.find().populate("author", ["firstName","lastName"])
+            res.status(200).json(books)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send('somthing went wrong')
+        }
+    }
+)
 /**
  * @desc    Get book by id
  * @route   /api/books/:id
  * @method  Get
  * @access  public
  */
-router.get('/:id', (req,res) => {
-    const book = books.find(b => b.id === Number(req.params.id))
-    book ? 
-        res.status(200).json(book) 
-        : 
-        res.status(404).json({message: 'book not found'})
-})
+router.get('/:id',
+    async (req,res) => {
+    try {
+        const book = await Book.findById(req.params.id).populate("author", ["firstName","lastName"])
+        res.status(200).send(`the book name is "${book.name}" written by "${book.author}"`) 
+    } catch (error) {
+        console.log(error)
+        res.status(404).send('book not found')
+    }
+    }
+)
 
 /**
  * @desc    Create new book
@@ -68,79 +56,71 @@ router.get('/:id', (req,res) => {
  * @method  Post
  * @access  public
  */
-router.post('/', (req,res) => {
-    
+router.post('/', async (req,res) => { 
+    // result    result.error
     const { error } = validateCreateBook(req.body)
-
     if(error) {
         return res.status(400).json(error.details[0].message)
     }
 
-    const book = {
-        id: books.length + 1,
-        name: req.body.name,
-        author: req.body.author
+    try {
+        const book = new Book({
+            title: req.body.title,
+            author: req.body.author
+        })
+        const result = await book.save()
+        res.status(201).json(result) // 201 => created successfuly
+    } catch (reason) {
+        console.log(reason)
+        res.status(500).send('Something went wrong')
     }
-    books.push(book)
-    res.status(201).json(book) // 201 => created successfuly
 })
-
 /**
  * @desc update a book
  * @route /ipi/books/:id
  * @method Put
  * @access public
  */
-router.put('/:id', (req,res) => {
+router.put('/:id', 
+    async (req,res) => {
     const { error } = validateUpdateBook(req.body)
     if(error) {
         return res.status(400).json({message: error.details[0].message})
     }
 
-    const book = books.find(b => b.id === Number(req.params.id))
-    if(book) {
-        res.status(200).json({message: 'book has been updated'})
-    } else{
-        res.status(404).json({message: 'book not found'})
+    try {
+        const updateBook = await Book.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set:{
+                    title: req.body.title,
+                    author: req.body.author
+                }
+            },
+            {
+                new: true
+            }
+        )
+        res.status(200).json(updateBook)
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('book not found')
     }
 })
-
 /**
  * @desc delete a book
  * @route /ipi/books/:id
  * @method Delete
  * @access public
  */
-router.delete('/:id', (req,res) => {
-    const book = books.find(b => b.id === Number(req.params.id))
-    if(book) {
-        res.status(200).json({message: 'book has been deleted'})
-    } else{
-        res.status(404).json({message: 'book not found'})
+router.delete('/:id', 
+    async (req,res) => {
+    try {
+        const book = await Book.findByIdAndDelete(req.params.id)
+        res.status(200).send('book has been deleted')
+    } catch (error) {
+        res.status(500).send('book not found')
     }
 })
-
-// Validate Create Book
-function validateCreateBook(obj) {
-    // if(!req.body.name) { 
-    //     return res.status(400).json('title is required')
-    // }
-    const schema = joi.object({
-        name: joi.string().trim().min(3).max(30).required(),
-        author: joi.string().trim()
-    })
-
-    return schema.validate(obj)
-}
-
-// Validate Update Book
-function validateUpdateBook(obj) {
-    const schema = joi.object({
-        name: joi.string().trim().min(3).max(30),
-        author: joi.string().trim()
-    })
-
-    return schema.validate(obj)
-}
 
 module.exports = router
