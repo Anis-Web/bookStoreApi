@@ -42,7 +42,7 @@ router.get('/:id',
     async (req,res) => {
     try {
         const book = await Book.findById(req.params.id).populate("author", ["firstName","lastName"])
-        res.status(200).send(`the book name is "${book.name}" written by "${book.author}"`) 
+        res.status(200).json(book) 
     } catch (error) {
         console.log(error)
         res.status(404).send('book not found')

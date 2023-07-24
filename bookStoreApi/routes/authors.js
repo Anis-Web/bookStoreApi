@@ -47,7 +47,7 @@ router.get('/', asyncHandler(
 router.get('/:id', asyncHandler(
     async (req,res) => {
         const author = await Author.findById(req.params.id)
-        res.status(200).send(`Author's name is: ${author.firstName} ${author.lastName}`)
+        res.status(200).json(author)
     }
 ))
 
