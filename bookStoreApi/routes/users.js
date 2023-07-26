@@ -6,6 +6,7 @@ const {
   User, 
   validateUpdateUser, 
 } = require("../models/User")
+const { verifyTokenAndAdmin, verifyTokenAndAuthoization } = require("../middlewars/verifyToken")
 
 /**
  * @desc    UpdateUser
@@ -15,6 +16,7 @@ const {
  */
 router.put(
   "/:id",
+  verifyTokenAndAuthoization,
   asyncHandler(
     async (req,res) => {
       const { error } = await validateUpdateUser(req.body)
@@ -23,6 +25,7 @@ router.put(
           message: error.details[0].message
         })
       }
+      
 
       if(req.body.password){
         const salt = await bcrypt.genSalt(10)
@@ -43,6 +46,23 @@ router.put(
       ).select("-password")
 
       res.status(200).json(updatedUser)
+    }
+  )
+)
+
+/**
+ * @desc    Get all users
+ * @route   /api/users
+ * @method  Get
+ * @access  private (only admin)
+ */
+router.get(
+  "/",
+  verifyTokenAndAdmin,
+  asyncHandler(
+    async (req,res) => {
+      const users = await User.find().select("-password")
+      res.status(200).json(users)
     }
   )
 )
