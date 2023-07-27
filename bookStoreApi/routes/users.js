@@ -67,4 +67,47 @@ router.get(
   )
 )
 
+/**
+ * @desc    Get user by id
+ * @route   /api/users/:id
+ * @method  Get
+ * @access  private (only admin $ user himself)
+ */
+router.get(
+  "/:id",
+  verifyTokenAndAuthoization,
+  asyncHandler(
+    async (req,res) => {
+      const user= await User.findById(req.params.id).select("-password")
+      if(user){
+        res.status(200).json(user)
+      } else {
+        res.status(404).json({
+          message: "user not found"
+        })
+      }
+    }
+  )
+)
+
+/**
+ * @desc    Delete user
+ * @route   /api/users/:id
+ * @method  delete
+ * @access  private (only admin and user himself)
+ */
+router.delete(
+  "/:id",
+  verifyTokenAndAuthoization,
+    async (req,res) => {
+      try {
+        await User.findByIdAndDelete(req.params.id).select("-password")
+      } catch (error) {
+        res.status(404).json({
+          message: "user not found"
+        })
+      }
+    }
+)
+
 module.exports = router

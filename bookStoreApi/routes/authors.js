@@ -1,7 +1,12 @@
 const express = require('express')
 const router = express.Router()
 const asyncHandler = require('express-async-handler')
-const {Author,validateCreateAuthor,validateUpdateAuthor} = require('../models/Author')
+const {
+    Author,
+    validateCreateAuthor,
+    validateUpdateAuthor
+} = require('../models/Author')
+const { verifyTokenAndAdmin } = require("../middlewars/verifyToken")
 
 /**
  * @desc    Get all authors
@@ -55,7 +60,7 @@ router.get('/:id', asyncHandler(
  * @desc    Create new author
  * @route   /api/authors
  * @method  Post
- * @access  public
+ * @access  private (only admin)
  */
 // router.post('/', async (req,res) => {
     
@@ -80,7 +85,7 @@ router.get('/:id', asyncHandler(
 //     }
 // })
 //with asyncHandler
-router.post('/', asyncHandler(
+router.post('/', verifyTokenAndAdmin, asyncHandler(
     async (req,res) => {
     
     const { error } = validateCreateAuthor(req.body)
@@ -104,7 +109,7 @@ router.post('/', asyncHandler(
  * @desc    Update new author
  * @route   /api/authors/:id
  * @method  Put
- * @access  public
+ * @access  private (only admin)
  */
 // router.put('/:id', async (req,res) => {
     
@@ -134,7 +139,7 @@ router.post('/', asyncHandler(
 //     }
 // })
 //with asyncHandler
-router.put('/:id', asyncHandler( 
+router.put('/:id', verifyTokenAndAdmin,asyncHandler( 
     async (req,res) => {
     
     const { error } = validateUpdateAuthor(req.body)
@@ -162,7 +167,7 @@ router.put('/:id', asyncHandler(
  * @desc delete a author
  * @route /ipi/author/:id
  * @method Delete
- * @access public
+ * @access private (only admin)
  */
 // router.delete('/:id', async (req,res) => {
 //     try {
@@ -175,7 +180,7 @@ router.put('/:id', asyncHandler(
 //     }
 // })
 //with asynchandler
-router.delete('/:id', asyncHandler( 
+router.delete('/:id', verifyTokenAndAdmin,asyncHandler( 
     async (req,res) => {
     const author = await Author.findById(req.params.id)
     await Author.findByIdAndDelete(author)
