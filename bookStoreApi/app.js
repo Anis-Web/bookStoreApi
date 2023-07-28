@@ -1,22 +1,14 @@
 const express = require('express')
-const booksPath = require('./routes/books')
-const authorsPath = require('./routes/authors')
-const authPath = require('./routes/auth')
-const usersPath = require('./routes/users')
 //connect between express and mongodb
-const mongoose = require('mongoose')
+const connectToDb = require('./config/db')
 const logger = require('./middlewars/logger')
 const { notFound, errorHandler } = require('./middlewars/errors')
-const dotenv = require('dotenv')
-dotenv.config()
+require('dotenv').config()
+
 
 //connection to DataBase
 //and this is a promise so it return error or success
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB...'))
-  .catch((error) => console.log('Connection failed to MongoDB', error))
-
+connectToDb()
 // init app
 const app = express()
 
@@ -26,10 +18,10 @@ app.use(express.json())
 app.use(logger)
 
 //Routes
-app.use('/api/books', booksPath)
-app.use('/api/authors', authorsPath)
-app.use('/api/auth', authPath)
-app.use('/api/users', usersPath)
+app.use('/api/books', require('./routes/books'))
+app.use('/api/authors', require('./routes/authors'))
+app.use('/api/auth', require('./routes/auth'))
+app.use('/api/users', require('./routes/users'))
 // Error handler middleware
 app.use(notFound)
 app.use(errorHandler)

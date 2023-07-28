@@ -46,13 +46,7 @@ router.post("/register", asyncHandler(
     })
     
     const result = await user.save()
-    const token = jwt.sign(
-      { 
-        id: user._id, 
-        isAdmin: user.isAdmin
-      },
-      process.env.JWT_SECRET_KEY
-    )
+    const token = user.generateToken()
 
     const { password, ...other } = result._doc
 
@@ -92,13 +86,7 @@ router.post(
       })
     }
 
-    const token = jwt.sign({ 
-        id: user._id, 
-        isAdmin: user.isAdmin
-      },
-      process.env.JWT_SECRET_KEY
-      // ,{expiresIn: "4d"}
-    )
+    const token = user.generateToken()
     const { password, ...other } = user._doc
 
     res.status(200).json({...other, token})
