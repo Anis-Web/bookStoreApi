@@ -4,7 +4,6 @@ const mongoose = require('mongoose')
 async function connectToDb(){
   //connection to DataBase
   //and this is a promise so it return error or success
-  
   // mongoose
   // .connect(process.env.MONGO_URI)
   // .then(() => console.log('Connected to MongoDB...'))
