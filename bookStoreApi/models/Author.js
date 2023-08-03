@@ -15,6 +15,12 @@ const AuthorSchema = new mongoose.Schema({
         trim: true,
         minlenght: 2,
         maxlength: 200,
+    },
+    nationality: {
+        type: String,
+        trim: true,
+        minlenght: 2,
+        maxlength: 200,
     }
 }, {
     timestamps: true
@@ -27,7 +33,8 @@ function validateCreateAuthor(obj) {
     const schema = joi.object({
         id: joi.number(),
         firstName: joi.string().trim().min(2).required(),
-        lastName: joi.string().trim().min(2).required()
+        lastName: joi.string().trim().min(2).required(),
+        nationality: joi.string().trim().min(2).max(200)
     })
 
     return schema.validate(obj)
@@ -38,7 +45,8 @@ function validateUpdateAuthor(obj) {
     const schema = joi.object({
         id: joi.number(),
         firstName: joi.string().trim().min(2).required(),
-        lastName: joi.string().trim().min(2).required()
+        lastName: joi.string().trim().min(2).required(),
+        nationality: joi.string().trim().min(2).max(200)
     })
 
     return schema.validate(obj)
