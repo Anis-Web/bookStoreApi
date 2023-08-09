@@ -1,7 +1,8 @@
 const asyncHandler = require('express-async-handler')
-const { User } = require('../models/User')
+const { User, validateChangePassword } = require('../models/User')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
 
 /**
  * @desc Get forgot password view
@@ -40,9 +41,38 @@ module.exports.sendFrogotPasswordLink = asyncHandler(async (req,res) => {
 
   const link = `http://localhost:${process.env.PORT}/password/reset-password/${user._id}/${token}`
 
-  res.json({
-    message: 'Click on the link', resetPasswordLink: link
+  const transporter = nodemailer.createTransport({
+    service: 'yandex',
+    auth: {
+      user: process.env.USER_EMAIL,
+      pass: process.env.USER_Pass
+    }
   })
+
+  const mailOptions = {
+    from: process.env.USER_EMAIL,
+    to: user.email,
+    subject: 'Reset Password',
+    html: `
+      <div>
+        <h4>Click on the link below to reset your password</h4>
+        <p>${link}</p>
+      </div>
+    `
+  }
+
+  transporter.sendMail(mailOptions, function(error,success){
+    if(error){
+      console.log(error)
+      res.status(500).json({
+        message: 'Somthing went wrong'
+      })
+    }else{
+      console.log(`Email sent: ${success.response}`)
+      res.render('link-send')
+    }
+  })
+
 })
 
 /**
@@ -77,6 +107,13 @@ module.exports.getResetPasswordView = asyncHandler(async (req,res) => {
  * @access public
  */
 module.exports.resetThePassword = asyncHandler(async (req,res) => {
+  const { error } = validateChangePassword(req.body)
+  if(error){
+    return res.status(400).json({
+      message: error.details[0].message
+    })
+  }
+
   const user = await User.findById(req.params.userId)
   if(!user) {
     return res.status(404).json({

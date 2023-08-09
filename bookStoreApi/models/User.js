@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const joi = require('joi')
+const passwordComplexity = require('joi-password-complexity')
 const jwt = require('jsonwebtoken')
 
 
@@ -9,7 +10,7 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minlenght: 5,
-    maxlength: 20,
+    maxlength: 200,
     unique: true
   },
   username: {
@@ -22,8 +23,7 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlenght: 6,
-    maxlength: 200,
+    minlenght: 8,
   },
   isAdmin: {
     type: Boolean,
@@ -51,9 +51,9 @@ const User = mongoose.model("User", UserSchema)
 function validateRegisterUser(obj) {
   const schema = joi.object(
     {
-      email: joi.string().trim().min(5).max(20).required().email(),
+      email: joi.string().trim().min(5).max(200).required().email(),
       username: joi.string().trim().min(2).max(30).required(),
-      password: joi.string().min(6).max(200).required()
+      password: passwordComplexity().required()
     }
   )
   return schema.validate(obj)
@@ -63,8 +63,18 @@ function validateRegisterUser(obj) {
 function validateLoginUser(obj) {
   const schema = joi.object(
     {
-      email: joi.string().trim().min(5).max(20).required().email(),
-      password: joi.string().min(6).max(200).required(),
+      email: joi.string().trim().min(5).max(200).required().email(),
+      password: joi.string().min(8).required(),
+    }
+  )
+  return schema.validate(obj)
+}
+
+//Validate Change User
+function validateChangePassword(obj) {
+  const schema = joi.object(
+    {
+      password: passwordComplexity().required(),
     }
   )
   return schema.validate(obj)
@@ -76,7 +86,7 @@ function validateUpdateUser(obj) {
     {
       email: joi.string().trim().min(5).max(20).email(),
       username: joi.string().trim().min(2).max(30),
-      password: joi.string().min(6).max(200)
+      password: passwordComplexity()
     }
   )
   return schema.validate(obj)
@@ -86,5 +96,6 @@ module.exports = {
   User,
   validateRegisterUser,
   validateLoginUser,
-  validateUpdateUser
+  validateUpdateUser,
+  validateChangePassword
 }
